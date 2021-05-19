@@ -279,6 +279,7 @@ status_t PublicVolume::doMount() {
 
     // See comment in model/EmulatedVolume.cpp
     ConfigureMaxDirtyRatioForFuse(GetFuseMountPathForUser(user_id, stableName), 40u);
+    ConfigureMinDirtyRatioForFuse(GetFuseMountPathForUser(user_id, stableName), 10u);
 
     return OK;
 }

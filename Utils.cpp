@@ -1536,6 +1536,29 @@ void ConfigureMaxDirtyRatioForFuse(const std::string& fuse_mount, unsigned int m
     }
 }
 
+// Configures min_ratio for the FUSE filesystem.
+void ConfigureMinDirtyRatioForFuse(const std::string& fuse_mount, unsigned int min_ratio) {
+    LOG(INFO) << "Configuring min_ratio of " << fuse_mount << " fuse filesystem to " << min_ratio;
+    if (min_ratio > 100) {
+        LOG(ERROR) << "Invalid min_ratio: " << min_ratio;
+        return;
+    }
+    std::string fuseBdiPath = getBdiPathForMount(fuse_mount);
+    if (fuseBdiPath == "") {
+        return;
+    }
+    std::string min_ratio_file = StringPrintf("%s/min_ratio", fuseBdiPath.c_str());
+    unique_fd fd(TEMP_FAILURE_RETRY(open(min_ratio_file.c_str(), O_WRONLY | O_CLOEXEC)));
+    if (fd.get() == -1) {
+        PLOG(ERROR) << "Failed to open " << min_ratio_file;
+        return;
+    }
+    LOG(INFO) << "Writing " << min_ratio << " to " << min_ratio_file;
+    if (!WriteStringToFd(std::to_string(min_ratio), fd)) {
+        PLOG(ERROR) << "Failed to write to " << min_ratio_file;
+    }
+}
+
 // Configures read ahead property of the fuse filesystem with the mount point |fuse_mount| by
 // writing |read_ahead_kb| to the /sys/class/bdi/MAJOR:MINOR/read_ahead_kb.
 void ConfigureReadAheadForFuse(const std::string& fuse_mount, size_t read_ahead_kb) {

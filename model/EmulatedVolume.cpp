@@ -390,7 +390,18 @@ status_t EmulatedVolume::doMount() {
         //
         // To prevent this, just give FUSE 40% max_ratio, meaning it can take
         // up to 40% of all dirty pages in the system.
+        //
+        // The reason we're tunning min_ratio is that there's suspicion that the
+        // writing thread will running slowly because of rate-limiting when
+        // proportion of fuse-bdi is near-zero... and the proportion of fuse-bdi
+        // will also ramp up slowly because the side effects of performance
+        // counter which can be upto number_of_cpus * counter_batch away from the
+        // real counter value.
+        //
+        // To prevent this,just give FUSE 10% min_ratio to give the bdi some
+        // breathing room for ramping up.
         ConfigureMaxDirtyRatioForFuse(GetFuseMountPathForUser(user_id, label), 40u);
+        ConfigureMinDirtyRatioForFuse(GetFuseMountPathForUser(user_id, label), 10u);
 
         // All mounts where successful, disable scope guards
         sdcardfs_guard.Disable();
