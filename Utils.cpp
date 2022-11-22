@@ -766,7 +766,11 @@ status_t ForkExecvpTimeout(const std::vector<std::string>& args, std::chrono::se
         }
         pid_t timer_pid = fork();
         if (timer_pid == 0) {
-            sleep(timeout.count());
+            int remaining = timeout.count();
+
+            do {
+                remaining = sleep(remaining);
+            } while (remaining);
             _exit(ETIMEDOUT);
         }
         if (timer_pid == -1) {
